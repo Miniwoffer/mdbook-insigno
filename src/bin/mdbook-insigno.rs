@@ -55,7 +55,7 @@ fn main() {
 
 const UML_DIR: &str = "/tmp/uml/";
 const GIT_DIR: &str = "/tmp/insigno/";
-const GIT_REMOTE: &str = "https://github.com/spacycoder/VectorMap";
+const GIT_REMOTE: &str = "git@github.com:spacycoder/VectorMap.git";
 const NAME: &str = "mdbook-puml-gen";
 
 struct MdbookDot;
