@@ -87,7 +87,6 @@ fn process <'a,I>(items: I, num_replaced_items: &mut usize) -> Result<()> where
     let re = Regex::new(r"\$(?P<cmd>\w+)\((?P<arg>[^)]+)\)").unwrap();
     for item in items {
         if let BookItem::Chapter(ref mut chapter) = *item {
-            let mut a_change = false;
             process(&mut chapter.sub_items, num_replaced_items).unwrap();
             chapter.content = re.replace(chapter.content.as_str(), | caps: &Captures | {
                 match &caps["cmd"] {
@@ -95,7 +94,6 @@ fn process <'a,I>(items: I, num_replaced_items: &mut usize) -> Result<()> where
                         eprintln!("Getting uml for '{}'", &caps["arg"]);
                         match get_uml(&caps["arg"]) {
                             Ok(data) => {
-                                a_change = true;
                                 data
                             },
                             Err(e) => {
@@ -107,9 +105,7 @@ fn process <'a,I>(items: I, num_replaced_items: &mut usize) -> Result<()> where
                     _ => {eprintln!("unkown command '{}'", &caps["cmd"]); "".to_string()}
                 }
             }).to_string();
-            if a_change {
-                eprintln!("{}", chapter.content);
-            }
+
         }
     }
     Ok(())
