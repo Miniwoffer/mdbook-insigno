@@ -88,11 +88,23 @@ fn process <'a,I>(items: I, num_replaced_items: &mut usize) -> Result<()> where
     for item in items {
         if let BookItem::Chapter(ref mut chapter) = *item {
             process(&mut chapter.sub_items, num_replaced_items).unwrap();
-            chapter.content = re.replace(chapter.content.as_str(), | caps: &Captures | {
+            chapter.content = re.replace_all(chapter.content.as_str(), | caps: &Captures | {
                 match &caps["cmd"] {
                     "uml" => {
                         eprintln!("Getting uml for '{}'", &caps["arg"]);
                         match get_uml(&caps["arg"]) {
+                            Ok(data) => {
+                                data
+                            },
+                            Err(e) => {
+                                eprintln!("Failed to get uml '{}'", e);
+                                "".to_string()
+                            },
+                        }
+                    },
+                    "src" => {
+                        eprintln!("Getting source for '{}'",&caps["arg"]);
+                        match get_src(&caps["arg"]) {
                             Ok(data) => {
                                 data
                             },
@@ -128,12 +140,22 @@ fn uml_setup(path:&str, remote:&str, uml_dir:&str) {
         git.wait_with_output().expect("Failed to wait for git");
     }
     eprintln!("Building uml files");
-    let mut git = Command::new("/home/odin/.dotnet/tools/puml-gen")
+    let mut git = Command::new("/root/.dotnet/tools/puml-gen")
         .args(&[path, "-dir", uml_dir]).stdout(Stdio::null())
         .spawn().expect("puml-gen falied");
     git.wait_with_output().expect("Failed to wait for git");
 }
 
+
+fn get_src(path:&str) -> Result<String> {
+    let path = format!("{}{}.cs", GIT_DIR, path);
+    //eprintln!("{}",path);
+    let mut file = File::open(path)?;
+    let mut data = String::from("\n```cs\n");
+    file.read_to_string(&mut data)?;
+    data.push_str("\n```\n");
+    return Ok(data);
+}
 
 fn get_uml(path:&str) -> Result<String> {
     let path = format!("{}{}.puml", UML_DIR, path);
